@@ -94,12 +94,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           MaterialPageRoute(builder: (context) => MainPage()),
         );
       });
-    } else if (username == 'admin' && password != 'admin') {
-      _showSnackBar('Password salah!', Colors.red);
-    } else if (username != 'admin' && password == 'admin') {
-      _showSnackBar('Username salah!', Colors.red);
-    } else {
-      _showSnackBar('Login gagal! Username dan password salah.', Colors.red);
+    }  else {
+      _showSnackBar('Login gagal! Username atau password salah.', Colors.red);
     }
 
     setState(() {

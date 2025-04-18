@@ -1,9 +1,10 @@
 // File: lib/pages/main_page.dart
 import 'package:flutter/material.dart';
+import 'package:project2/pages/time_converter_app.dart';
 import 'stopwatch_app.dart';
 import 'number_type_app.dart';
 import 'tracking_lbs_app.dart';
-// import 'time_converter_app.dart';
+import 'time_converter_app.dart';
 import 'recommended_sites_app.dart';
 import 'team_members_page.dart';
 import 'help_page.dart';
@@ -19,7 +20,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-  
+
   final List<Widget> _pages = [
     HomeContent(),
     MemberListScreen(),
@@ -29,70 +30,55 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Multi App'),
-        backgroundColor: Color(0xFF6A11CB),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () => _showLogoutDialog(),
-          ),
-        ],
-      ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Beranda',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group),
-            label: 'Anggota',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.help),
-            label: 'Bantuan',
-          ),
-        ],
-        selectedItemColor: Color(0xFF6A11CB),
-        unselectedItemColor: Colors.grey,
-      ),
+  currentIndex: _selectedIndex,
+  onTap: (index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  },
+  type: BottomNavigationBarType.fixed,
+  backgroundColor: Colors.white,
+  selectedItemColor: Colors.white,
+  unselectedItemColor: Colors.grey,
+  elevation: 8, // memberi bayangan bawah
+  items: [
+    BottomNavigationBarItem(
+      icon: _buildFloatingIcon(Icons.home, 0),
+      label: 'Beranda',
+    ),
+    BottomNavigationBarItem(
+      icon: _buildFloatingIcon(Icons.group, 1),
+      label: 'Anggota',
+    ),
+    BottomNavigationBarItem(
+      icon: _buildFloatingIcon(Icons.help, 2),
+      label: 'Bantuan',
+    ),
+  ],
+),
+
     );
   }
-  
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Konfirmasi Logout'),
-        content: Text('Apakah Anda yakin ingin keluar?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              await SessionManager.logout();
-              Navigator.pushAndRemoveUntil(
-                context, 
-                MaterialPageRoute(builder: (context) => LoginPage()),
-                (route) => false,
-              );
-            },
-            child: Text('Logout', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+
+  Widget _buildFloatingIcon(IconData icon, int index) {
+    final bool isSelected = _selectedIndex == index;
+    return Transform.translate(
+      offset: isSelected
+          ? Offset(0, -20)
+          : Offset(0, 0), // Lebih tinggi dari sebelumnya
+      child: Container(
+        padding: EdgeInsets.all(isSelected ? 8 : 0), // Membuat bulatan besar
+        decoration: BoxDecoration(
+          color: isSelected ? Color(0xFF6A11CB) : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: isSelected ? 24 : 20,
+          color: isSelected ? Colors.white : Colors.grey,
+        ),
       ),
     );
   }
@@ -112,53 +98,63 @@ class HomeContent extends StatelessWidget {
       color: Colors.green,
       page: NumberTypePage(),
     ),
-    // MenuOption(
-    //   title: 'Tracking LBS',
-    //   icon: Icons.location_on,
-    //   color: Colors.red,
-    //   page: LBSTrackingPage(),
-    // ),
-    // MenuOption(
-    //   title: 'Konversi Waktu',
-    //   icon: Icons.access_time,
-    //   color: Colors.purple,
-    //   page: TimeConverterPage(),
-    // ),
-    // MenuOption(
-    //   title: 'Rekomendasi Website',
-    //   icon: Icons.public,
-    //   color: Colors.blue,
-    //   page: WebsiteRecommendationPage(),
-    // ),
+    MenuOption(
+        title: 'Tracking LBS',
+        icon: Icons.location_on,
+        color: Colors.red,
+        page: TrackinglbsPage()),
+    MenuOption(
+        title: 'Konversi Waktu',
+        icon: Icons.access_time,
+        color: Colors.purple,
+        page: TimeConverterPage()),
+    MenuOption(
+        title: 'Rekomendasi Website',
+        icon: Icons.public,
+        color: Colors.blue,
+        page: WebsiteRecommendationPage(),),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Color(0xFFE6E6FA)],
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Multi App'),
+        backgroundColor: Color(0xFF6A11CB),
+        centerTitle: true,
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Pilih Menu',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF6A11CB),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Color(0xFFE6E6FA)],
+          ),
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Text(
+                    'Pilih Menu',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF6A11CB),
+                    ),
+                    textAlign: TextAlign.left,
+                  ),
                 ),
-              ),
-              SizedBox(height: 30),
-              ...menuOptions.map((option) => _buildMenuButton(context, option)).toList(),
-            ],
+                SizedBox(height: 30),
+                ...menuOptions
+                    .map((option) => _buildMenuButton(context, option))
+                    .toList(),
+              ],
+            ),
           ),
         ),
       ),
@@ -171,7 +167,7 @@ class HomeContent extends StatelessWidget {
       child: InkWell(
         onTap: () {
           Navigator.push(
-            context, 
+            context,
             MaterialPageRoute(builder: (context) => option.page),
           );
         },

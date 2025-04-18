@@ -1,4 +1,3 @@
-// File: lib/pages/welcome_page.dart
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 
@@ -7,31 +6,30 @@ class WelcomePage extends StatefulWidget {
   _WelcomePageState createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStateMixin {
+class _WelcomePageState extends State<WelcomePage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeInAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
     );
-    
-    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn)
-    );
-    
-    _slideAnimation = Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut)
-    );
-    
+
+    _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+
+    _slideAnimation = Tween<Offset>(begin: Offset(0, 0.2), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
     _controller.forward();
   }
-  
+
   @override
   void dispose() {
     _controller.dispose();
@@ -79,38 +77,23 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.apps_rounded,
-                        size: 60,
-                        color: Color(0xFF6A11CB),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 SizedBox(height: 40),
-                
-                // Welcome text
+
                 FadeTransition(
                   opacity: _fadeInAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: Text(
-                      "Selamat Datang di",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 8),
-                FadeTransition(
-                  opacity: _fadeInAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: Text(
-                      "Multi App",
+                      "MultiMate",
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -126,7 +109,7 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: Text(
-                      "Satu aplikasi dengan berbagai fitur menarik untuk kebutuhan Anda",
+                      "Solusi terpadu dengan beragam fitur cerdas untuk mendukung produktivitas Anda",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -136,7 +119,7 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
                   ),
                 ),
                 SizedBox(height: 60),
-                
+
                 // Get Started button
                 FadeTransition(
                   opacity: _fadeInAnimation,
@@ -147,14 +130,19 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
                         Navigator.pushReplacement(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    LoginPage(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
                               var begin = Offset(1.0, 0.0);
                               var end = Offset.zero;
                               var curve = Curves.easeInOut;
-                              var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
                               var offsetAnimation = animation.drive(tween);
-                              return SlideTransition(position: offsetAnimation, child: child);
+                              return SlideTransition(
+                                  position: offsetAnimation, child: child);
                             },
                             transitionDuration: Duration(milliseconds: 500),
                           ),
@@ -170,7 +158,8 @@ class _WelcomePageState extends State<WelcomePage> with SingleTickerProviderStat
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Color(0xFF6A11CB),
-                        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+                        padding:
+                            EdgeInsets.symmetric(vertical: 16, horizontal: 32),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
