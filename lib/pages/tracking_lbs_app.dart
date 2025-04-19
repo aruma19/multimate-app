@@ -14,17 +14,28 @@ class TrackinglbsPage extends StatefulWidget {
 }
 
 class _TrackinglbsPageState extends State<TrackinglbsPage> {
-  LatLng _currentPosition = LatLng(-6.2088, 106.8456); // Default Jakarta
+  // Change default location to your preferred city or location
+  // Example: Bandung coordinates
+  LatLng _currentPosition = LatLng(-6.9175, 107.6191); // Default Bandung
   LatLng? _destinationPosition;
   final MapController _mapController = MapController();
   double _currentZoom = 16.0;
   bool _isNavigating = false;
   List<LatLng> _routePoints = [];
   
+  // Theme colors
+  final Color primaryColor = const Color.fromARGB(255, 89, 0, 185); // Green
+  final Color secondaryColor = const Color(0xFF6A11CB); // Light Green
+  final Color accentColor = const Color.fromARGB(255, 173, 110, 241); // Lighter Green
+  final Color textColor = Colors.white;
+  
   // Search controller
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
+  Timer? _searchDebounce;
+  final Duration _searchDebounceTime = const Duration(milliseconds: 500);
+  final Map<String, List<Map<String, dynamic>>> _searchCache = {};
   
   // Location tracking
   late StreamSubscription<Position> _positionStream;
@@ -42,6 +53,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
   void dispose() {
     _positionStream.cancel();
     _searchController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -82,7 +94,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     if (!serviceEnabled) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Aktifkan layanan lokasi")),
+          SnackBar(
+            content: const Text("Aktifkan layanan lokasi"),
+            backgroundColor: primaryColor,
+          ),
         );
       }
       setState(() {
@@ -99,7 +114,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           permission == LocationPermission.denied) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Izin lokasi ditolak")),
+            SnackBar(
+              content: const Text("Izin lokasi ditolak"),
+              backgroundColor: primaryColor,
+            ),
           );
         }
         setState(() {
@@ -124,7 +142,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error mendapatkan lokasi: $e")),
+          SnackBar(
+            content: Text("Error mendapatkan lokasi: $e"),
+            backgroundColor: primaryColor,
+          ),
         );
       }
       setState(() {
@@ -156,21 +177,31 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       return;
     }
 
+    // Check cache first
+    if (_searchCache.containsKey(query)) {
+      setState(() {
+        _searchResults = _searchCache[query]!;
+        _isSearching = false;
+      });
+      return;
+    }
+
     setState(() {
       _isSearching = true;
     });
 
     try {
-      // Use Nominatim API for geocoding (OpenStreetMap)
-      final response = await http.get(
+      // Try Nominatim first
+      final nominatimResponse = await http.get(
         Uri.parse(
-          'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}&format=json&limit=5&addressdetails=1&countrycodes=id',
+          'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}'
+          '&format=json&limit=5&addressdetails=1&countrycodes=id&polygon_geojson=1',
         ),
         headers: {'User-Agent': 'TrackingLBSApp'},
-      );
+      ).timeout(const Duration(seconds: 3));
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = jsonDecode(response.body);
+      if (nominatimResponse.statusCode == 200) {
+        List<dynamic> data = jsonDecode(nominatimResponse.body);
         List<Map<String, dynamic>> results = [];
 
         for (var item in data) {
@@ -179,6 +210,57 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
             'lat': double.parse(item['lat']),
             'lon': double.parse(item['lon']),
             'address': item['address'],
+            'importance': item['importance'] ?? 0.0,
+          });
+        }
+
+        // Sort by importance (higher importance = better match)
+        results.sort((a, b) => (b['importance'] as double).compareTo(a['importance'] as double));
+
+        setState(() {
+          _searchResults = results.take(5).toList(); // Limit to top 5 results
+          _isSearching = false;
+        });
+
+        // Cache the results
+        _searchCache[query] = _searchResults;
+      } else {
+        // Fallback to another service if Nominatim fails
+        await _fallbackSearch(query);
+      }
+    } catch (e) {
+      // Try fallback if primary search fails
+      await _fallbackSearch(query);
+    }
+  }
+
+  Future<void> _fallbackSearch(String query) async {
+    try {
+      // Example using Mapbox API (replace with your actual token)
+      const mapboxToken = 'pk.yourmapboxtoken';
+      final response = await http.get(
+        Uri.parse(
+          'https://api.mapbox.com/geocoding/v5/mapbox.places/${Uri.encodeComponent(query)}.json'
+          '?access_token=$mapboxToken'
+          '&country=ID&limit=5',
+        ),
+      ).timeout(const Duration(seconds: 3));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        List<Map<String, dynamic>> results = [];
+
+        for (var feature in data['features']) {
+          results.add({
+            'display_name': feature['place_name'],
+            'lat': feature['center'][1].toDouble(),
+            'lon': feature['center'][0].toDouble(),
+            'address': {
+              'city': feature['context']?.firstWhere(
+                (ctx) => ctx['id'].toString().contains('place'),
+                orElse: () => null,
+              )?['text'],
+            },
           });
         }
 
@@ -186,15 +268,66 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           _searchResults = results;
           _isSearching = false;
         });
+
+        // Cache the results
+        _searchCache[query] = _searchResults;
       } else {
-        throw Exception('Failed to load search results');
+        throw Exception('Fallback search failed');
       }
     } catch (e) {
       setState(() {
-        _searchResults = [{'display_name': 'Pencarian gagal: $e'}];
+        _searchResults = [{
+          'display_name': 'Pencarian tidak tersedia saat ini',
+          'error': true
+        }];
         _isSearching = false;
       });
     }
+  }
+
+  String _formatAddress(Map<String, dynamic> location) {
+    if (location.containsKey('error')) return location['display_name'];
+    
+    if (location.containsKey('address')) {
+      final address = location['address'];
+      List<String> parts = [];
+      
+      // Build address from most specific to least specific
+      if (address['road'] != null) parts.add(address['road']);
+      if (address['neighbourhood'] != null) parts.add(address['neighbourhood']);
+      if (address['suburb'] != null) parts.add(address['suburb']);
+      if (address['village'] != null) parts.add(address['village']);
+      if (address['city'] != null) parts.add(address['city']);
+      if (address['state'] != null) parts.add(address['state']);
+      
+      // If we don't have enough details, use the full display name
+      if (parts.length < 2 && location['display_name'] != null) {
+        return location['display_name'].toString().split(',').take(3).join(', ');
+      }
+      
+      return parts.join(', ');
+    }
+    
+    // For Mapbox results
+    if (location['display_name'] != null) {
+      return location['display_name'].toString().split(',').take(3).join(', ');
+    }
+    
+    return 'Lokasi tidak diketahui';
+  }
+
+  String _getLocationSubtitle(Map<String, dynamic> result) {
+    if (result.containsKey('error')) return '';
+    
+    if (result['address'] is Map) {
+      final address = result['address'] as Map;
+      if (address['city'] != null && address['state'] != null) {
+        return '${address['city']}, ${address['state']}';
+      }
+      if (address['city'] != null) return address['city'].toString();
+      if (address['state'] != null) return address['state'].toString();
+    }
+    return result['display_name']?.toString().split(',').skip(1).take(2).join(',') ?? '';
   }
 
   void _setDestination(Map<String, dynamic> location) {
@@ -208,21 +341,6 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       
       _getRoute();
     }
-  }
-
-  String _formatAddress(Map<String, dynamic> location) {
-    if (location.containsKey('address')) {
-      final address = location['address'];
-      List<String> parts = [];
-      
-      if (address['road'] != null) parts.add(address['road']);
-      if (address['neighbourhood'] != null) parts.add(address['neighbourhood']);
-      if (address['suburb'] != null) parts.add(address['suburb']);
-      if (address['city'] != null) parts.add(address['city']);
-      
-      return parts.join(', ');
-    }
-    return location['display_name'].toString();
   }
 
   Future<void> _getRoute() async {
@@ -241,7 +359,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           '${_destinationPosition!.longitude},${_destinationPosition!.latitude}'
           '?overview=full&geometries=geojson',
         ),
-      );
+      ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -270,7 +388,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Menggunakan rute perkiraan: $e")),
+          SnackBar(
+            content: Text("Menggunakan rute perkiraan: $e"),
+            backgroundColor: primaryColor,
+          ),
         );
       }
     }
@@ -349,8 +470,9 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFF03254c),
-        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: primaryColor,
+        iconTheme: IconThemeData(color: textColor),
+        centerTitle: true,
       ),
       body: Stack(
         children: [
@@ -367,23 +489,27 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                         controller: _searchController,
                         decoration: InputDecoration(
                           hintText: "Cari lokasi tujuan...",
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: Icon(Icons.search, color: primaryColor),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
                             borderSide: BorderSide.none,
                           ),
                           filled: true,
-                          fillColor: Colors.grey[200],
+                          fillColor: Colors.grey[100],
                           contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         ),
                         onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            _searchLocation(value);
-                          } else {
-                            setState(() {
-                              _searchResults = [];
-                            });
-                          }
+                          if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
+                          
+                          _searchDebounce = Timer(_searchDebounceTime, () {
+                            if (value.isNotEmpty) {
+                              _searchLocation(value);
+                            } else {
+                              setState(() {
+                                _searchResults = [];
+                              });
+                            }
+                          });
                         },
                       ),
                     ),
@@ -399,32 +525,73 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
               // Search results
               if (_searchResults.isNotEmpty)
                 Container(
-                  height: _searchResults.length > 3 ? 150 : null,
-                  color: Colors.white,
+                  height: _searchResults.length > 3 ? 200 : null,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   child: _isSearching
-                      ? const Center(child: CircularProgressIndicator())
+                      ? Center(child: CircularProgressIndicator(color: secondaryColor))
                       : ListView.builder(
                           shrinkWrap: true,
+                          physics: const ClampingScrollPhysics(),
                           itemCount: _searchResults.length,
                           itemBuilder: (context, index) {
                             final result = _searchResults[index];
-                            return ListTile(
-                              title: Text(
-                                _formatAddress(result),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            return Card(
+                              margin: const EdgeInsets.all(4),
+                              child: ListTile(
+                                leading: Icon(Icons.location_on, color: secondaryColor),
+                                title: Text(
+                                  _formatAddress(result),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  _getLocationSubtitle(result),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                onTap: () {
+                                  if (!result.containsKey('error')) {
+                                    _setDestination(result);
+                                    FocusScope.of(context).unfocus();
+                                  }
+                                },
                               ),
-                              subtitle: Text(
-                                result['address']?['city'] ?? result['address']?['county'] ?? '',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              onTap: () {
-                                _setDestination(result);
-                              },
                             );
                           },
                         ),
+                )
+              else if (_isSearching)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(color: secondaryColor),
+                        const SizedBox(height: 8),
+                        const Text("Mencari lokasi..."),
+                      ],
+                    ),
+                  ),
+                )
+              else if (_searchController.text.isNotEmpty && _searchResults.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: const Center(
+                    child: Text("Tidak ada hasil ditemukan"),
+                  ),
                 ),
               
               // Map
@@ -439,18 +606,11 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                         interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
                       ),
                       children: [
-                        // Modern map tiles with more details
                         TileLayer(
                           urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                           subdomains: const ['a', 'b', 'c'],
                           userAgentPackageName: 'com.example.tracking_lbs',
                         ),
-                        
-                        // Alternative map style (uncomment to use)
-                        // TileLayer(
-                        //   urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                        //   subdomains: const ['a', 'b', 'c'],
-                        // ),
                         
                         // Current location marker
                         MarkerLayer(
@@ -461,15 +621,15 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                               height: 40,
                               builder: (ctx) => Container(
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF03254c).withOpacity(0.2),
+                                  color: secondaryColor.withOpacity(0.2),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: const EdgeInsets.all(4),
-                                child: const CircleAvatar(
-                                  backgroundColor: Color(0xFF03254c),
+                                child: CircleAvatar(
+                                  backgroundColor: primaryColor,
                                   child: Icon(
                                     Icons.navigation,
-                                    color: Colors.white,
+                                    color: textColor,
                                     size: 14,
                                   ),
                                 ),
@@ -484,7 +644,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                             polylines: [
                               Polyline(
                                 points: _routePoints,
-                                color: Colors.blue.withOpacity(0.7),
+                                color: accentColor.withOpacity(0.7),
                                 strokeWidth: 5.0,
                               ),
                             ],
@@ -498,7 +658,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                                 point: _destinationPosition!,
                                 width: 40,
                                 height: 40,
-                                builder: (ctx) => const Icon(
+                                builder: (ctx) => Icon(
                                   Icons.location_pin,
                                   color: Colors.red,
                                   size: 40,
@@ -519,17 +679,17 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                           FloatingActionButton(
                             heroTag: "zoomIn",
                             mini: true,
-                            backgroundColor: const Color(0xFF1167b1),
+                            backgroundColor: secondaryColor,
                             onPressed: _zoomIn,
-                            child: const Icon(Icons.add, color: Colors.white),
+                            child: Icon(Icons.add, color: textColor),
                           ),
                           const SizedBox(height: 15),
                           FloatingActionButton(
                             heroTag: "zoomOut",
                             mini: true,
-                            backgroundColor: const Color(0xFF187bcd),
+                            backgroundColor: accentColor,
                             onPressed: _zoomOut,
-                            child: const Icon(Icons.remove, color: Colors.white),
+                            child: Icon(Icons.remove, color: textColor),
                           ),
                         ],
                       ),
@@ -556,7 +716,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.navigation, color: Color(0xFF03254c)),
+                              Icon(Icons.navigation, color: primaryColor),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -572,8 +732,8 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                                     ),
                                     Text(
                                       _searchController.text,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
                                         fontSize: 14,
                                       ),
                                       maxLines: 1,
@@ -598,20 +758,20 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           
           // Loading indicator for initial location
           if (_isLocationLoading)
-            const Center(
-              child: CircularProgressIndicator(),
+            Center(
+              child: CircularProgressIndicator(color: primaryColor),
             ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF2a9df4),
+        backgroundColor: primaryColor,
         onPressed: () {
           setState(() {
             _isTracking = true; // Resume tracking when button is pressed
           });
           _mapController.move(_currentPosition, _currentZoom);
         },
-        child: const Icon(Icons.my_location, color: Colors.white),
+        child: Icon(Icons.my_location, color: textColor),
       ),
     );
   }
