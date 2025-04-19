@@ -49,8 +49,8 @@ class _TimeConverterPageState extends State<TimeConverterPage> {
       }
 
       final digitOnly = input.replaceAll(RegExp(r'[^0-9]'), '');
-      if (digitOnly.length > 14) {
-        _error = 'Maksimum 14 digit angka yang diperbolehkan';
+      if (digitOnly.length > 15) {
+        _error = 'Maksimum 15 digit angka yang diperbolehkan';
         return;
       }
 
