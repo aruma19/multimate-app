@@ -40,7 +40,11 @@ class _MainPageState extends State<MainPage> {
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
       ),
     );
   }
@@ -71,17 +75,23 @@ class HomeContent extends StatelessWidget {
         color: Colors.purple,
         page: TimeConverterPage()),
     MenuOption(
-        title: 'Rekomendasi Website',
-        icon: Icons.public,
-        color: Colors.blue,
-        page: WebsiteRecommendationPage(),),
+      title: 'Rekomendasi Website',
+      icon: Icons.public,
+      color: Colors.blue,
+      page: WebsiteRecommendationPage(),
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Multi App'),
+        title: Text(
+          'Multi App',
+          style: TextStyle(
+            color: Colors.white, // Warna teks jadi putih
+          ),
+        ),
         backgroundColor: Color(0xFF6A11CB),
         centerTitle: true,
       ),

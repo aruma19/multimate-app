@@ -148,13 +148,6 @@ class _WelcomePageState extends State<WelcomePage>
                           ),
                         );
                       },
-                      child: Text(
-                        "GET STARTED",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Color(0xFF6A11CB),
@@ -165,6 +158,13 @@ class _WelcomePageState extends State<WelcomePage>
                         ),
                         elevation: 5,
                         shadowColor: Colors.black38,
+                      ),
+                      child: Text(
+                        "GET STARTED",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
                   ),

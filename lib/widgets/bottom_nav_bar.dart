@@ -39,22 +39,23 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.3),
-            spreadRadius: 1,
-            blurRadius: 10,
-            offset: Offset(0, -2),
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.bottomCenter,
+      children: [
+        Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.3),
+                spreadRadius: 1,
+                blurRadius: 10,
+                offset: Offset(0, -2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: SafeArea(
-        child: Container(
-          height: 70,
-          padding: EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -64,65 +65,92 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
             ],
           ),
         ),
-      ),
+        // Floating circle for selected item
+        if (widget.currentIndex >= 0 && widget.currentIndex <= 2)
+          Positioned(
+            top: -20,
+            child: TweenAnimationBuilder(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+              builder: (context, double value, child) {
+                return Transform.translate(
+                  offset: Offset(
+                    (widget.currentIndex - 1) * MediaQuery.of(context).size.width / 3,
+                    0,
+                  ),
+                  child: Transform.scale(
+                    scale: value,
+                    child: Container(
+                      height: 50,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF6A11CB),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFF6A11CB).withOpacity(0.3),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          )
+                        ],
+                      ),
+                      child: Icon(
+                        widget.currentIndex == 0 
+                            ? Icons.home 
+                            : widget.currentIndex == 1 
+                                ? Icons.group 
+                                : Icons.help,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
     final bool isSelected = widget.currentIndex == index;
     
-    return GestureDetector(
-      onTap: () {
-        _animationController.reset();
-        _animationController.forward();
-        widget.onTap(index);
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            padding: EdgeInsets.all(isSelected ? 12 : 8),
-            decoration: BoxDecoration(
-              color: isSelected ? Color(0xFF6A11CB) : Colors.transparent,
-              shape: BoxShape.circle,
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: Color(0xFF6A11CB).withOpacity(0.3),
-                  spreadRadius: 1,
-                  blurRadius: 8,
-                  offset: Offset(0, 3),
-                )
-              ] : [],
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          _animationController.reset();
+          _animationController.forward();
+          widget.onTap(index);
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Empty space to prevent overlapping with floating circle
+            isSelected 
+                ? SizedBox(height: 26) 
+                : SizedBox(
+                    height: 26,
+                    child: Icon(
+                      icon,
+                      color: Colors.grey,
+                      size: 22,
+                    ),
+                  ),
+            SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: Duration(milliseconds: 300),
+              style: TextStyle(
+                color: isSelected ? Color(0xFF6A11CB) : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: isSelected ? 12 : 11,
+              ),
+              child: Text(label),
             ),
-            child: Icon(
-              icon,
-              size: isSelected ? 26 : 22,
-              color: isSelected ? Colors.white : Colors.grey,
-            ),
-          ),
-          SizedBox(height: 4),
-          AnimatedDefaultTextStyle(
-            duration: Duration(milliseconds: 300),
-            style: TextStyle(
-              color: isSelected ? Color(0xFF6A11CB) : Colors.grey,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              fontSize: isSelected ? 12 : 11,
-            ),
-            child: Text(label),
-          ),
-          AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            height: 4,
-            width: isSelected ? 20 : 0,
-            margin: EdgeInsets.only(top: 2),
-            decoration: BoxDecoration(
-              color: isSelected ? Color(0xFF6A11CB) : Colors.transparent,
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

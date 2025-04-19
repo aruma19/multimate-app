@@ -9,19 +9,19 @@ class _MemberListScreenState extends State<MemberListScreen> {
   final PageController _pageController = PageController();
   final List<Map<String, String>> members = [
     {
-      'spotify': 'Spotify ID: farros123',
+      'instagram': 'mafahaq',
       'name': 'Muhammad Almas Farros D',
       'nim': '123220133',
       'image': 'assets/images/farros.jpg'
     },
     {
-      'spotify': 'Spotify ID: jeslyn_vicky',
+      'instagram': 'jeslyn_vicky',
       'name': 'Jeslyn Vicky Hanjaya',
       'nim': '123220150',
       'image': 'assets/images/jeslyn.jpg'
     },
     {
-      'spotify': 'Spotify ID: resti_r',
+      'instagram': 'resti_r',
       'name': 'Resti Ramadhani',
       'nim': '123220147',
       'image': 'assets/images/resti.jpg'
@@ -53,20 +53,21 @@ class _MemberListScreenState extends State<MemberListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Multi App'),
+        title: Text(
+          'Multi App',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Color(0xFF6A11CB),
         centerTitle: true,
       ),
-      // Modern gradient background
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color.fromARGB(255, 207, 218, 255),
-              Color.fromARGB(255, 238, 238, 238),
-            ],
+            colors: [Colors.white, Color(0xFFE6E6FA)],
           ),
         ),
         child: SafeArea(
@@ -81,7 +82,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Color(0xFF6A11CB),
                     shadows: [
                       Shadow(
                         blurRadius: 10.0,
@@ -92,10 +93,10 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   ),
                 ),
               ),
-              
-              // Page indicator
+
+              // Page indicator - memindahkan lebih ke bawah
               Positioned(
-                bottom: 50,
+                bottom: 30, // Memindahkan indikator lebih ke bawah
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
@@ -106,8 +107,8 @@ class _MemberListScreenState extends State<MemberListScreen> {
                       height: 10,
                       width: currentIndex == index ? 30 : 10,
                       decoration: BoxDecoration(
-                        color: currentIndex == index 
-                            ? Colors.white 
+                        color: currentIndex == index
+                            ? Colors.white
                             : Colors.white.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -115,7 +116,7 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   ),
                 ),
               ),
-              
+
               // Member cards
               Padding(
                 padding: const EdgeInsets.only(top: 30),
@@ -131,8 +132,9 @@ class _MemberListScreenState extends State<MemberListScreen> {
                     return Center(
                       child: Container(
                         width: 320,
-                        height: 520,
-                        margin: EdgeInsets.symmetric(horizontal: 15, vertical: 60),
+                        height: 500, // Mengurangi sedikit tinggi kartu
+                        margin:
+                            EdgeInsets.symmetric(horizontal: 15, vertical: 60),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
@@ -191,7 +193,8 @@ class _MemberListScreenState extends State<MemberListScreen> {
                             ),
                             SizedBox(height: 5),
                             Container(
-                              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 5),
                               decoration: BoxDecoration(
                                 color: Color(0xFF1A2980).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(20),
@@ -206,16 +209,25 @@ class _MemberListScreenState extends State<MemberListScreen> {
                               ),
                             ),
                             SizedBox(height: 30),
-                            // Spotify ID with custom design
+                            // Instagram ID dengan desain yang lebih sesuai
                             Container(
                               width: 260,
-                              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 15, vertical: 12),
                               decoration: BoxDecoration(
-                                color: Color(0xFF1DB954), // Spotify green
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF833AB4), // Instagram gradient
+                                    Color(0xFFF56040),
+                                    Color(0xFFFF0080),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0xFF1DB954).withOpacity(0.3),
+                                    color: Colors.pink.withOpacity(0.3),
                                     blurRadius: 8,
                                     offset: Offset(0, 3),
                                   ),
@@ -224,10 +236,10 @@ class _MemberListScreenState extends State<MemberListScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.music_note, color: Colors.white),
+                                  Icon(Icons.camera_alt, color: Colors.white), // Icon Instagram
                                   SizedBox(width: 8),
                                   Text(
-                                    members[index]['spotify']!,
+                                    "@${members[index]['instagram']!}",
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600,
@@ -244,17 +256,24 @@ class _MemberListScreenState extends State<MemberListScreen> {
                   },
                 ),
               ),
-              
-              // Navigation buttons with better design
+
+              // Navigation buttons dengan warna yang lebih kontras
               Positioned(
                 left: 15,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withOpacity(0.8), // Membuat tombol lebih terlihat
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                    icon: Icon(Icons.arrow_back_ios_new, color: Color(0xFF6A11CB)),
                     onPressed: prevPage,
                     iconSize: 24,
                   ),
@@ -264,11 +283,18 @@ class _MemberListScreenState extends State<MemberListScreen> {
                 right: 15,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withOpacity(0.8), // Membuat tombol lebih terlihat
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.arrow_forward_ios, color: Colors.white),
+                    icon: Icon(Icons.arrow_forward_ios, color: Color(0xFF6A11CB)),
                     onPressed: nextPage,
                     iconSize: 24,
                   ),

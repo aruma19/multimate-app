@@ -91,22 +91,30 @@ class HelpPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Multi App'),
+        title: Text(
+          'Multi App',
+          style: TextStyle(
+            color: Colors.white, // Warna teks jadi putih
+          ),
+        ),
         backgroundColor: Color(0xFF6A11CB),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(
+              Icons.logout,
+              color: Colors.white, // Warna ikon jadi hitam
+            ),
             onPressed: () => _showLogoutDialog(context),
-          ),  
+          ),
         ],
       ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
+            colors: [Colors.white, Color(0xFFE6E6FA)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.white, Color(0xFFE6E6FA)],
           ),
         ),
         child: Padding(
@@ -120,7 +128,7 @@ class HelpPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple,
+                    color: Color(0xFF6A11CB),
                   ),
                 ),
               ),
@@ -131,19 +139,37 @@ class HelpPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final item = helpItems[index];
                     return Card(
-                      elevation: 3,
+                      elevation: 4,
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       child: ExpansionTile(
-                        leading: Icon(item.icon, color: Colors.deepPurple),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF6A11CB),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(item.icon, color: Colors.white),
+                        ),
                         title: Text(
                           item.title,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
                             color: Colors.black87,
                           ),
+                        ),
+                        backgroundColor: const Color(0xFFF8F3FF),
+                        collapsedBackgroundColor: const Color(0xFFF8F3FF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide.none,
+                        ),
+                        collapsedShape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide.none,
                         ),
                         children: [
                           Padding(
@@ -152,11 +178,14 @@ class HelpPage extends StatelessWidget {
                               vertical: 8.0,
                             ),
                             child: Align(
-                              alignment: Alignment.centerLeft,
+                              alignment: Alignment
+                                  .centerLeft, // pastikan teks benar-benar rata kiri
                               child: Text(
                                 item.content.join("\n"),
-                                textAlign: TextAlign.left,
-                                style: const TextStyle(color: Colors.black87),
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                ),
                               ),
                             ),
                           ),
@@ -172,32 +201,34 @@ class HelpPage extends StatelessWidget {
       ),
     );
   }
+
   void _showLogoutDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('Konfirmasi Logout'),
-      content: Text('Apakah Anda yakin ingin keluar?'),
-      actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: Text('Batal'),
-        ),
-        TextButton(
-          onPressed: () async {
-            await SessionManager.logout();
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => LoginPage()),
-              (route) => false,
-            );
-          },
-          child: Text('Logout', style: TextStyle(color: Colors.red)),
-        ),
-      ],
-    ),
-  );
-}
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await SessionManager.logout();
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => LoginPage()),
+                (route) => false,
+              );
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -18,7 +18,7 @@ class _TimeConverterPageState extends State<TimeConverterPage> {
   int? _seconds;
   String _error = '';
 
-  final Color resultBoxColor = Color(0xFFd9e8ff); // biru muda senada dengan background
+  final Color resultBoxColor = Color(0xFFd9e8ff);
 
   void _convertTime() {
     final input = _controller.text.trim();
@@ -95,98 +95,237 @@ class _TimeConverterPageState extends State<TimeConverterPage> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              // Custom header
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.0001),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              children: [
+                // Tombol back di pojok kiri atas
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                      icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                ),
-              ),
-
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    children: [
-                      const Text(
-                        'Konversi Tahun ke Bulan, Minggu, Hari, Jam, Menit, dan Detik',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _controller,
-                        keyboardType: TextInputType.numberWithOptions(decimal: true),
-                        decoration: const InputDecoration(
-                          labelText: 'Masukkan jumlah tahun',
-                          border: OutlineInputBorder(),
-                          filled: true,
-                          fillColor: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      if (_error.isNotEmpty)
-                        Text(_error, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _convertTime,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFd0efff),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                        ),
-                        child: const Text('Konversi'),
-                      ),
-                      const SizedBox(height: 30),
-                      _buildResultBox('Tahun', _getDisplayValue(_years)),
-                      _buildResultBox('Bulan', _getDisplayValue(_months)),
-                      _buildResultBox('Minggu', _getDisplayValue(_weeks)),
-                      _buildResultBox('Hari', _getDisplayValue(_days)),
-                      _buildResultBox('Jam', _getDisplayValue(_hours)),
-                      _buildResultBox('Menit', _getDisplayValue(_minutes)),
-                      _buildResultBox('Detik', _getDisplayValue(_seconds)),
-                    ],
                   ),
                 ),
-              ),
-            ],
+                
+                // Judul dengan format yang sama seperti halaman jenis bilangan
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.access_time, color: Colors.white, size: 28),
+                    SizedBox(width: 8),
+                    Text(
+                      "KONVERSI WAKTU",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 30),
+
+                // Konten utama
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        // Input field dengan styling yang lebih baik
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          padding: EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Masukkan jumlah tahun:",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              TextField(
+                                controller: _controller,
+                                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white.withOpacity(0.2),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  hintText: "Contoh: 1, 2.5, 0.25",
+                                  hintStyle: TextStyle(
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _convertTime,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Color(0xFF6A11CB),
+                                    padding: EdgeInsets.symmetric(vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 5,
+                                  ),
+                                  child: Text(
+                                    'KONVERSI',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        // Error message
+                        if (_error.isNotEmpty) ...[
+                          Container(
+                            margin: EdgeInsets.only(top: 16),
+                            padding: EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline, color: Colors.white),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _error,
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        
+                        // Results header
+                        if (_years != null) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 20.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.greenAccent),
+                                SizedBox(width: 8),
+                                Text(
+                                  "HASIL KONVERSI",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          // Result boxes dengan styling yang lebih baik
+                          _buildEnhancedResultBox('Tahun', _getDisplayValue(_years), Icons.calendar_today),
+                          _buildEnhancedResultBox('Bulan', _getDisplayValue(_months), Icons.date_range),
+                          _buildEnhancedResultBox('Minggu', _getDisplayValue(_weeks), Icons.view_week),
+                          _buildEnhancedResultBox('Hari', _getDisplayValue(_days), Icons.today),
+                          _buildEnhancedResultBox('Jam', _getDisplayValue(_hours), Icons.access_time),
+                          _buildEnhancedResultBox('Menit', _getDisplayValue(_minutes), Icons.timer),
+                          _buildEnhancedResultBox('Detik', _getDisplayValue(_seconds), Icons.hourglass_bottom),
+                        ],
+                        
+                        // Space at bottom for scrolling
+                        SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildResultBox(String label, String value) {
+  Widget _buildEnhancedResultBox(String label, String value, IconData icon) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
         color: resultBoxColor,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          )
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          Text(value, style: const TextStyle(fontSize: 16)),
+          Icon(icon, color: Color(0xFF6A11CB), size: 24),
+          SizedBox(width: 12),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Spacer(),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Color(0xFF6A11CB).withOpacity(0.3)),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2575FC),
+              ),
+            ),
+          ),
         ],
       ),
     );

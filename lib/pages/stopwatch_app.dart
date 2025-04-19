@@ -135,7 +135,7 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
             child: Column(
               children: [
                 Padding(
-                padding: const EdgeInsets.only(left: 8.0, top: 8.0),
+                padding: const EdgeInsets.only(top: 8.0),
                 child: Align(
                   alignment: Alignment.topLeft,
                   child: IconButton(

@@ -6,28 +6,45 @@ class WebsiteRecommendationPage extends StatefulWidget {
   const WebsiteRecommendationPage({super.key});
 
   @override
-  State<WebsiteRecommendationPage> createState() => _WebsiteRecommendationPageState();
+  State<WebsiteRecommendationPage> createState() =>
+      _WebsiteRecommendationPageState();
 }
 
 class _WebsiteRecommendationPageState extends State<WebsiteRecommendationPage> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFd0efff),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1167B1),
-        title: Text("Phone Recomendation"),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: GridView.builder(
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 8,
+      child: Scaffold(
+        backgroundColor: Colors.transparent, // supaya gradasi kelihatan
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text(
+            "Phone Recommendation",
+            style: TextStyle(color: Colors.white), // agar kontras di gradasi
           ),
-          itemBuilder: (context, index) => _phonesData(context, index),
-          itemCount: phones.length,
+          centerTitle: true,
+        ),
+
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 8,
+            ),
+            itemBuilder: (context, index) => _phonesData(context, index),
+            itemCount: phones.length,
+          ),
         ),
       ),
     );
@@ -56,14 +73,14 @@ class _WebsiteRecommendationPageState extends State<WebsiteRecommendationPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(phones[index].model,
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
                   Text(
                     phones[index].brand,
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: const Color.fromARGB(255, 208, 190, 190)),
                   ),
                   Text(
                     "\$ ${phones[index].price[0]}",
-                    style: TextStyle(color: Colors.green),
+                    style: TextStyle(color: const Color.fromARGB(255, 24, 240, 31)),
                   ),
                 ],
               ),
