@@ -10,6 +10,7 @@ import 'team_members_page.dart';
 import 'help_page.dart';
 import 'login_page.dart';
 import '../services/session_manager.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
@@ -27,58 +28,19 @@ class _MainPageState extends State<MainPage> {
     HelpPage(),
   ];
 
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-  currentIndex: _selectedIndex,
-  onTap: (index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  },
-  type: BottomNavigationBarType.fixed,
-  backgroundColor: Colors.white,
-  selectedItemColor: Colors.white,
-  unselectedItemColor: Colors.grey,
-  elevation: 8, // memberi bayangan bawah
-  items: [
-    BottomNavigationBarItem(
-      icon: _buildFloatingIcon(Icons.home, 0),
-      label: 'Beranda',
-    ),
-    BottomNavigationBarItem(
-      icon: _buildFloatingIcon(Icons.group, 1),
-      label: 'Anggota',
-    ),
-    BottomNavigationBarItem(
-      icon: _buildFloatingIcon(Icons.help, 2),
-      label: 'Bantuan',
-    ),
-  ],
-),
-
-    );
-  }
-
-  Widget _buildFloatingIcon(IconData icon, int index) {
-    final bool isSelected = _selectedIndex == index;
-    return Transform.translate(
-      offset: isSelected
-          ? Offset(0, -20)
-          : Offset(0, 0), // Lebih tinggi dari sebelumnya
-      child: Container(
-        padding: EdgeInsets.all(isSelected ? 8 : 0), // Membuat bulatan besar
-        decoration: BoxDecoration(
-          color: isSelected ? Color(0xFF6A11CB) : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          icon,
-          size: isSelected ? 24 : 20,
-          color: isSelected ? Colors.white : Colors.grey,
-        ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
       ),
     );
   }
