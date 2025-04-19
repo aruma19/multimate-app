@@ -15,13 +15,13 @@ class _MemberListScreenState extends State<MemberListScreen> {
       'image': 'assets/images/farros.jpg'
     },
     {
-      'instagram': 'jeslyn_vicky',
+      'instagram': 'jeslyn.vh',
       'name': 'Jeslyn Vicky Hanjaya',
       'nim': '123220150',
       'image': 'assets/images/jeslyn.jpg'
     },
     {
-      'instagram': 'resti_r',
+      'instagram': 'restirama_',
       'name': 'Resti Ramadhani',
       'nim': '123220147',
       'image': 'assets/images/resti.jpg'
