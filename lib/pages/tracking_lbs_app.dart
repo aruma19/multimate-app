@@ -15,8 +15,7 @@ class TrackinglbsPage extends StatefulWidget {
 
 class _TrackinglbsPageState extends State<TrackinglbsPage> {
   // Change default location to your preferred city or location
-  // Example: Bandung coordinates
-  LatLng _currentPosition = LatLng(-6.9175, 107.6191); // Default Bandung
+  LatLng _currentPosition = LatLng(-7.7956, 110.3695); // Default Yogyakarta
   LatLng? _destinationPosition;
   final MapController _mapController = MapController();
   double _currentZoom = 16.0;
@@ -24,9 +23,9 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
   List<LatLng> _routePoints = [];
   
   // Theme colors
-  final Color primaryColor = const Color.fromARGB(255, 89, 0, 185); // Green
-  final Color secondaryColor = const Color(0xFF6A11CB); // Light Green
-  final Color accentColor = const Color.fromARGB(255, 173, 110, 241); // Lighter Green
+  final Color primaryColor = const Color.fromARGB(255, 89, 0, 185); // Purple
+  final Color secondaryColor = const Color(0xFF6A11CB); // Light Purple
+  final Color accentColor = const Color.fromARGB(255, 173, 110, 241); // Lighter Purple
   final Color textColor = Colors.white;
   
   // Search controller
