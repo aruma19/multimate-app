@@ -1,5 +1,7 @@
-// File: lib/pages/main_page.dart
+// Import package Flutter yang diperlukan
 import 'package:flutter/material.dart';
+
+// Import halaman-halaman dan widget tambahan dari project
 import 'package:project2/pages/time_converter_app.dart';
 import 'stopwatch_app.dart';
 import 'number_type_app.dart';
@@ -12,6 +14,8 @@ import 'login_page.dart';
 import '../services/session_manager.dart';
 import '../widgets/bottom_nav_bar.dart';
 
+/// MainPage adalah halaman utama setelah login,
+/// menampilkan navigasi bawah dan konten dinamis.
 class MainPage extends StatefulWidget {
   const MainPage({Key? key}) : super(key: key);
 
@@ -20,14 +24,16 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Menyimpan index halaman yang sedang aktif
 
+  // Daftar halaman yang akan ditampilkan berdasarkan bottom navigation
   final List<Widget> _pages = [
-    HomeContent(),
-    MemberListScreen(),
-    HelpPage(),
+    HomeContent(),         // Halaman home dengan daftar menu
+    MemberListScreen(),    // Halaman daftar anggota tim
+    HelpPage(),            // Halaman bantuan
   ];
 
+  /// Mengubah tampilan halaman sesuai index yang diklik
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -37,7 +43,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: _pages[_selectedIndex], // Menampilkan halaman sesuai index aktif
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
         onTap: (index) {
@@ -50,7 +56,10 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
+/// HomeContent adalah halaman beranda utama
+/// yang menampilkan menu-menu fitur dalam bentuk tombol
 class HomeContent extends StatelessWidget {
+  // Daftar menu aplikasi
   final List<MenuOption> menuOptions = [
     MenuOption(
       title: 'Stopwatch',
@@ -65,15 +74,17 @@ class HomeContent extends StatelessWidget {
       page: NumberTypePage(),
     ),
     MenuOption(
-        title: 'Tracking LBS',
-        icon: Icons.location_on,
-        color: Colors.red,
-        page: TrackinglbsPage()),
+      title: 'Tracking LBS',
+      icon: Icons.location_on,
+      color: Colors.red,
+      page: TrackinglbsPage(),
+    ),
     MenuOption(
-        title: 'Konversi Waktu',
-        icon: Icons.access_time,
-        color: Colors.purple,
-        page: TimeConverterPage()),
+      title: 'Konversi Waktu',
+      icon: Icons.access_time,
+      color: Colors.purple,
+      page: TimeConverterPage(),
+    ),
     MenuOption(
       title: 'Rekomendasi Website',
       icon: Icons.public,
@@ -85,16 +96,19 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar di bagian atas halaman
       appBar: AppBar(
         title: Text(
           'Multi App',
           style: TextStyle(
-            color: Colors.white, // Warna teks jadi putih
+            color: Colors.white, // Warna teks AppBar putih
           ),
         ),
-        backgroundColor: Color(0xFF6A11CB),
+        backgroundColor: Color(0xFF6A11CB), // Warna latar AppBar
         centerTitle: true,
       ),
+
+      // Body dengan latar gradasi dan daftar menu
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -109,6 +123,7 @@ class HomeContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                // Judul "Pilih Menu"
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Text(
@@ -122,6 +137,7 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 30),
+                // Membuat tombol menu berdasarkan daftar menu
                 ...menuOptions
                     .map((option) => _buildMenuButton(context, option))
                     .toList(),
@@ -133,11 +149,13 @@ class HomeContent extends StatelessWidget {
     );
   }
 
+  /// Widget untuk membangun tombol menu individual
   Widget _buildMenuButton(BuildContext context, MenuOption option) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 32.0),
       child: InkWell(
         onTap: () {
+          // Navigasi ke halaman yang dipilih
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => option.page),
@@ -159,6 +177,7 @@ class HomeContent extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // Bagian kiri berisi ikon dan warna khas
               Container(
                 width: 70,
                 decoration: BoxDecoration(
@@ -171,11 +190,12 @@ class HomeContent extends StatelessWidget {
                 child: Center(
                   child: Icon(
                     option.icon,
-                    color: Colors.white,
+                    color: Colors.white, // Warna ikon jadi putih
                     size: 30,
                   ),
                 ),
               ),
+              // Judul menu
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -188,6 +208,7 @@ class HomeContent extends StatelessWidget {
                   ),
                 ),
               ),
+              // Ikon panah ke kanan
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Icon(
@@ -204,11 +225,12 @@ class HomeContent extends StatelessWidget {
   }
 }
 
+/// Model data untuk opsi menu aplikasi
 class MenuOption {
-  final String title;
-  final IconData icon;
-  final Color color;
-  final Widget page;
+  final String title;   // Judul menu
+  final IconData icon;  // Ikon menu
+  final Color color;    // Warna ikon menu
+  final Widget page;    // Halaman tujuan menu
 
   MenuOption({
     required this.title,

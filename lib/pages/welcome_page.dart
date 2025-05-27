@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:project2/pages/main_menu.dart';
+import 'package:project2/services/session_manager.dart';
 import 'login_page.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -126,27 +128,38 @@ class _WelcomePageState extends State<WelcomePage>
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    LoginPage(),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              var begin = Offset(1.0, 0.0);
-                              var end = Offset.zero;
-                              var curve = Curves.easeInOut;
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              var offsetAnimation = animation.drive(tween);
-                              return SlideTransition(
-                                  position: offsetAnimation, child: child);
-                            },
-                            transitionDuration: Duration(milliseconds: 500),
-                          ),
-                        );
+                      onPressed: () async {
+                        bool isLoggedIn = await SessionManager.isLoggedIn();
+
+                        if (isLoggedIn) {
+                          // Langsung ke MainPage jika masih dalam sesi login
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => MainPage()),
+                          );
+                        } else {
+                          // Jika belum login, ke halaman login
+                          Navigator.pushReplacement(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      LoginPage(),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                var begin = Offset(1.0, 0.0);
+                                var end = Offset.zero;
+                                var curve = Curves.easeInOut;
+                                var tween = Tween(begin: begin, end: end)
+                                    .chain(CurveTween(curve: curve));
+                                var offsetAnimation = animation.drive(tween);
+                                return SlideTransition(
+                                    position: offsetAnimation, child: child);
+                              },
+                              transitionDuration: Duration(milliseconds: 500),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,

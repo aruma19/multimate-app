@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project2/data/phone_data.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetailPage extends StatefulWidget {
   final int index;
@@ -13,7 +14,28 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
   int selectedStorage = 0;
   bool isFavorite = false;
-  
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFavoriteStatus();
+  }
+
+  Future<void> _loadFavoriteStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isFavorite = prefs.getBool('favorite_${phones[widget.index].model}') ?? false;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isFavorite = !isFavorite;
+    });
+    await prefs.setBool('favorite_${phones[widget.index].model}', isFavorite);
+  }
+
   @override
   Widget build(BuildContext context) {
     final phone = phones[widget.index];
@@ -36,11 +58,7 @@ class _DetailPageState extends State<DetailPage> {
           iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             IconButton(
-              onPressed: () {
-                setState(() {
-                  isFavorite = !isFavorite;
-                });
-              },
+              onPressed: _toggleFavorite,
               icon: Icon(
                 isFavorite ? Icons.favorite : Icons.favorite_border,
                 color: isFavorite ? Colors.red : Colors.white,
@@ -131,7 +149,6 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                 ],
               ),
-              
               // Content section
               Padding(
                 padding: const EdgeInsets.all(20),
@@ -167,9 +184,7 @@ class _DetailPageState extends State<DetailPage> {
                         ),
                       ],
                     ),
-                    
                     const SizedBox(height: 25),
-                    
                     // Storage options
                     const Text(
                       "Storage Options",
@@ -193,15 +208,15 @@ class _DetailPageState extends State<DetailPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                               decoration: BoxDecoration(
-                                color: selectedStorage == index 
-                                    ? Colors.white 
+                                color: selectedStorage == index
+                                    ? Colors.white
                                     : Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(25),
                               ),
                               child: Text(
                                 "${phone.storage[index]}GB",
                                 style: TextStyle(
-                                  color: selectedStorage == index 
+                                  color: selectedStorage == index
                                       ? const Color(0xFF6A11CB)
                                       : Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -212,9 +227,7 @@ class _DetailPageState extends State<DetailPage> {
                         );
                       }),
                     ),
-                    
                     const SizedBox(height: 25),
-                    
                     // Specs section
                     const Text(
                       "Specifications",
@@ -225,7 +238,6 @@ class _DetailPageState extends State<DetailPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
@@ -246,9 +258,7 @@ class _DetailPageState extends State<DetailPage> {
                         ],
                       ),
                     ),
-                    
                     const SizedBox(height: 30),
-                    
                     // Buy button
                     SizedBox(
                       width: double.infinity,
@@ -281,7 +291,6 @@ class _DetailPageState extends State<DetailPage> {
                         ),
                       ),
                     ),
-                    
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -292,7 +301,7 @@ class _DetailPageState extends State<DetailPage> {
       ),
     );
   }
-  
+
   Widget _buildSpecRow(IconData icon, String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),

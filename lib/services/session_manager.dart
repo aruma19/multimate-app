@@ -24,7 +24,7 @@ class SessionManager {
   }
 
   // Check session status and redirect accordingly
-  static Future<bool> checkAndRedirect() async {
+  static Future<bool> checkAndRedirect() async {    
     // Get login status
     bool loggedIn = await isLoggedIn();
     return loggedIn;

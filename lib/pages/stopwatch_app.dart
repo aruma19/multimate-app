@@ -1,23 +1,30 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+/// Halaman Stopwatch untuk aplikasi, menggunakan `StatefulWidget` karena status timer yang berubah.
 class StopwatchPage extends StatefulWidget {
   @override
   _StopwatchPageState createState() => _StopwatchPageState();
+  //Duration _initialOffset = Duration(minutes: 59, seconds: 50, milliseconds: 990);
+
 }
 
-class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProviderStateMixin {
+class _StopwatchPageState extends State<StopwatchPage>
+    with SingleTickerProviderStateMixin {
+  // Inisialisasi objek stopwatch dan timer untuk memperbarui tampilan.
   Stopwatch _stopwatch = Stopwatch();
   Timer? _timer;
-  List<Duration> _lapTimes = [];
-  Duration _previousLapTime = Duration.zero;
-  
+  List<Duration> _lapTimes = []; // Menyimpan waktu lap yang tercatat
+  Duration _previousLapTime = Duration.zero; // Waktu lap sebelumnya
+
+  // Inisialisasi animasi untuk efek visual pada tombol dan stopwatch.
   late AnimationController _animationController;
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+    // Menyiapkan animasi dengan durasi 500ms dan efek `easeInOut`.
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -28,41 +35,59 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
     );
   }
 
+  // Fungsi untuk memulai stopwatch.
   void _startStopwatch() {
     if (!_stopwatch.isRunning) {
       _stopwatch.start();
       _timer = Timer.periodic(Duration(milliseconds: 100), (_) {
-        setState(() {});
+        setState(() {
+          // Batas maksimum 59 menit, 59 detik, 990 milidetik
+          if (_stopwatch.elapsed.inMinutes >= 60) {
+            _stopwatch.reset();
+            _lapTimes.clear();
+            _previousLapTime = Duration.zero;
+            _animationController.reset();
+          }
+        });
       });
       _animationController.repeat(reverse: true);
     }
   }
 
+  // Fungsi untuk menghentikan stopwatch.
   void _stopStopwatch() {
     _stopwatch.stop();
-    _timer?.cancel();
-    _animationController.stop();
+    _timer?.cancel(); // Menghentikan timer untuk pembaruan tampilan
+    _animationController.stop(); // Menghentikan animasi
     setState(() {});
   }
 
+  // Fungsi untuk mereset stopwatch dan daftar lap.
   void _resetStopwatch() {
     _stopwatch.reset();
     _lapTimes.clear();
     _previousLapTime = Duration.zero;
-    _animationController.reset();
+    _animationController.reset(); // Mereset animasi
     setState(() {});
   }
 
+  // Fungsi untuk menambahkan lap (putaran) ke daftar lap.
   void _addLap() {
     final currentElapsed = _stopwatch.elapsed;
     final lapTime = currentElapsed - _previousLapTime;
-    
+
+    //final currentDuration = _initialOffset + _stopwatch.elapsed;
+    //final timeStr = _formatDuration(currentDuration);
+
+
     setState(() {
-      _lapTimes.insert(0, lapTime);
+      _lapTimes.insert(
+          0, lapTime); // Menambahkan lap ke posisi pertama dalam daftar
       _previousLapTime = currentElapsed;
     });
   }
 
+  // Fungsi untuk memformat durasi menjadi string (MM:SS.mmm).
   String _formatDuration(Duration duration) {
     return '${duration.inMinutes.remainder(60).toString().padLeft(2, '0')}:'
         '${duration.inSeconds.remainder(60).toString().padLeft(2, '0')}.'
@@ -72,11 +97,12 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
   @override
   void dispose() {
     _stopwatch.stop();
-    _timer?.cancel();
-    _animationController.dispose();
+    _timer?.cancel(); // Menghentikan timer saat widget dihancurkan
+    _animationController.dispose(); // Menghentikan controller animasi
     super.dispose();
   }
 
+  // Widget untuk membuat tombol berbentuk bulat dengan teks dan ikon.
   Widget _buildCircularButton({
     required VoidCallback onPressed,
     required IconData icon,
@@ -134,20 +160,22 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Column(
               children: [
+                // Tombol kembali
                 Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: IconButton(
+                      icon:
+                          Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
                   ),
                 ),
-              ),
-                
-                // Judul
+
+                // Judul halaman
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -165,8 +193,8 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                   ],
                 ),
                 SizedBox(height: 40),
-                
-                // Timer bulat
+
+                // Tampilan waktu dengan efek animasi
                 Center(
                   child: Container(
                     height: 220,
@@ -187,8 +215,10 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                               color: Colors.white.withOpacity(0.9),
                               boxShadow: [
                                 BoxShadow(
-                                  color: _stopwatch.isRunning 
-                                      ? Colors.purpleAccent.withOpacity(0.5 + _animation.value * 0.3)
+                                  color: _stopwatch.isRunning
+                                      //warna ketika waktu berjalan
+                                      ? Colors.purpleAccent.withOpacity(
+                                          0.5 + _animation.value * 0.3)
                                       : Colors.transparent,
                                   blurRadius: 20,
                                   spreadRadius: 5,
@@ -201,6 +231,7 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                                 style: TextStyle(
                                   fontSize: 40,
                                   fontWeight: FontWeight.w700,
+                                  //warna text angka nya
                                   color: Color(0xFF6A11CB),
                                 ),
                               ),
@@ -212,8 +243,8 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                   ),
                 ),
                 SizedBox(height: 40),
-                
-                // Tombol-tombol
+
+                // Tombol aksi (Mulai, Berhenti, Putaran, Reset)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: _stopwatch.isRunning
@@ -251,8 +282,8 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                         ],
                 ),
                 SizedBox(height: 30),
-                
-                // Daftar putaran
+
+                // Daftar lap (putaran)
                 if (_lapTimes.isNotEmpty) ...[
                   Divider(thickness: 1, color: Colors.white.withOpacity(0.5)),
                   Padding(
@@ -271,6 +302,7 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.9,
                       decoration: BoxDecoration(
+                        //mengatur tingkat transparansi (alpha) dari sebuah warna. 1 = transparan
                         color: Colors.white.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -279,13 +311,15 @@ class _StopwatchPageState extends State<StopwatchPage> with SingleTickerProvider
                         itemCount: _lapTimes.length,
                         itemBuilder: (context, index) {
                           return Container(
-                            margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                            margin: EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 8),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.7),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: ListTile(
-                              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               leading: CircleAvatar(
                                 backgroundColor: Color(0xFF6A11CB),
                                 child: Text(

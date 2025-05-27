@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:project2/pages/welcome_page.dart';
 import '../services/session_manager.dart';
 import 'login_page.dart';
 
+/// Model untuk item bantuan (help item)
+/// Menyimpan informasi judul, isi (list of string), dan ikon yang ditampilkan
 class HelpItem {
   final String title;
   final List<String> content;
@@ -14,7 +17,10 @@ class HelpItem {
   });
 }
 
+/// Halaman Bantuan (HelpPage) yang menampilkan berbagai panduan penggunaan aplikasi.
+/// Terdiri dari beberapa ExpansionTile yang menjelaskan fitur-fitur aplikasi.
 class HelpPage extends StatelessWidget {
+  /// Daftar item bantuan yang akan ditampilkan
   final List<HelpItem> helpItems = [
     HelpItem(
       title: 'Cara Login',
@@ -48,7 +54,7 @@ class HelpPage extends StatelessWidget {
       content: [
         '1. Masukkan bilangan yang ingin dicek pada kotak input.',
         '2. Klik tombol "Cek" untuk melihat jenis bilangan dari inputan.',
-        '2. Aplikasi akan menampilkan jenis bilangan tersebut (prima, desimal, bulat, dll).'
+        '3. Aplikasi akan menampilkan jenis bilangan tersebut (prima, desimal, bulat, dll).'
       ],
       icon: Icons.numbers,
     ),
@@ -90,25 +96,25 @@ class HelpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar dengan tombol logout
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Multi App',
           style: TextStyle(
-            color: Colors.white, // Warna teks jadi putih
+            color: Colors.white, // Warna teks putih
           ),
         ),
-        backgroundColor: Color(0xFF6A11CB),
+        backgroundColor: const Color(0xFF6A11CB), // Warna ungu
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: Colors.white, // Warna ikon jadi hitam
-            ),
-            onPressed: () => _showLogoutDialog(context),
+            icon: Icon(Icons.logout, color: Colors.white),
+            onPressed: () => _showLogoutDialog(context), // Aksi logout
           ),
         ],
       ),
+
+      // Body dengan latar belakang gradasi dan daftar bantuan
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -135,7 +141,7 @@ class HelpPage extends StatelessWidget {
               const SizedBox(height: 20),
               Expanded(
                 child: ListView.builder(
-                  itemCount: helpItems.length,
+                  itemCount: helpItems.length, // Jumlah item bantuan
                   itemBuilder: (context, index) {
                     final item = helpItems[index];
                     return Card(
@@ -151,7 +157,7 @@ class HelpPage extends StatelessWidget {
                             color: Color(0xFF6A11CB),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(item.icon, color: Colors.white),
+                          child: Icon(item.icon, color: Colors.white), // Ikon bantuan
                         ),
                         title: Text(
                           item.title,
@@ -178,10 +184,9 @@ class HelpPage extends StatelessWidget {
                               vertical: 8.0,
                             ),
                             child: Align(
-                              alignment: Alignment
-                                  .centerLeft, // pastikan teks benar-benar rata kiri
+                              alignment: Alignment.centerLeft,
                               child: Text(
-                                item.content.join("\n"),
+                                item.content.join("\n"), // Gabungkan list jadi teks multiline
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.black87,
@@ -202,6 +207,7 @@ class HelpPage extends StatelessWidget {
     );
   }
 
+  /// Menampilkan dialog konfirmasi logout
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -209,16 +215,18 @@ class HelpPage extends StatelessWidget {
         title: const Text('Konfirmasi Logout'),
         content: const Text('Apakah Anda yakin ingin keluar?'),
         actions: [
+          // Tombol batal logout
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Batal'),
           ),
+          // Tombol konfirmasi logout
           TextButton(
             onPressed: () async {
-              await SessionManager.logout();
+              await SessionManager.logout(); // Hapus session
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
+                MaterialPageRoute(builder: (context) => WelcomePage()), // Kembali ke halaman awal
                 (route) => false,
               );
             },

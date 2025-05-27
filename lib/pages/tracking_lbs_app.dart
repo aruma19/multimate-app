@@ -6,6 +6,10 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 
+/// Widget TrackinglbsPage
+/// 
+/// Halaman utama untuk fitur pelacakan lokasi dan navigasi
+/// Menampilkan peta dengan posisi pengguna, pencarian lokasi, dan navigasi rute
 class TrackinglbsPage extends StatefulWidget {
   const TrackinglbsPage({super.key});
 
@@ -14,65 +18,107 @@ class TrackinglbsPage extends StatefulWidget {
 }
 
 class _TrackinglbsPageState extends State<TrackinglbsPage> {
-  // Change default location to your preferred city or location
-  LatLng _currentPosition = LatLng(-7.7956, 110.3695); // Default Yogyakarta
+  // Lokasi default (Yogyakarta) sebagai titik awal sebelum mendapatkan lokasi pengguna
+  LatLng _currentPosition = LatLng(-7.7956, 110.3695); 
+  
+  // Lokasi tujuan untuk navigasi, null jika belum ditentukan
   LatLng? _destinationPosition;
+  
+  // Controller untuk mengontrol tampilan peta
   final MapController _mapController = MapController();
+  
+  // Level zoom default peta
   double _currentZoom = 16.0;
+  
+  // Status navigasi aktif
   bool _isNavigating = false;
+  
+  // Titik-titik rute untuk polyline
   List<LatLng> _routePoints = [];
   
-  // Theme colors
-  final Color primaryColor = const Color.fromARGB(255, 89, 0, 185); // Purple
-  final Color secondaryColor = const Color(0xFF6A11CB); // Light Purple
-  final Color accentColor = const Color.fromARGB(255, 173, 110, 241); // Lighter Purple
-  final Color textColor = Colors.white;
+  /// Warna tema aplikasi
+  final Color primaryColor = const Color.fromARGB(255, 89, 0, 185); // Ungu utama
+  final Color secondaryColor = const Color(0xFF6A11CB); // Ungu terang
+  final Color accentColor = const Color.fromARGB(255, 173, 110, 241); // Ungu lebih terang
+  final Color textColor = Colors.white; // Warna teks utama
   
-  // Search controller
+  /// Controller dan variabel untuk fitur pencarian
+  // Controller untuk field input pencarian
   final TextEditingController _searchController = TextEditingController();
+  
+  // Hasil pencarian lokasi
   List<Map<String, dynamic>> _searchResults = [];
+  
+  // Status proses pencarian
   bool _isSearching = false;
+  
+  // Timer untuk debounce input pencarian (mengurangi request API)
   Timer? _searchDebounce;
+  
+  // Waktu debounce untuk pencarian
   final Duration _searchDebounceTime = const Duration(milliseconds: 500);
+  
+  // Cache hasil pencarian untuk menghemat request API
   final Map<String, List<Map<String, dynamic>>> _searchCache = {};
   
-  // Location tracking
+  /// Variabel untuk pelacakan lokasi
+  // Subscription untuk stream posisi
   late StreamSubscription<Position> _positionStream;
+  
+  // Status pelacakan otomatis
   bool _isTracking = true;
+  
+  // Status loading awal lokasi
   bool _isLocationLoading = true;
 
+  /// Inisialisasi state
+  /// Dipanggil saat widget pertama kali dibuat
   @override
   void initState() {
     super.initState();
+    // Mendapatkan posisi awal
     _determinePosition();
+    // Memulai pelacakan lokasi real-time
     _startLocationTracking();
   }
 
+  /// Pembersihan resource saat widget dihapus
   @override
   void dispose() {
+    // Membatalkan subscription posisi untuk mencegah memory leak
     _positionStream.cancel();
+    // Membersihkan controller pencarian
     _searchController.dispose();
+    // Membatalkan timer debounce jika masih aktif
     _searchDebounce?.cancel();
     super.dispose();
   }
 
+  /// Memulai pelacakan lokasi pengguna secara real-time
+  /// 
+  /// Menggunakan Geolocator untuk mendapatkan stream posisi
+  /// dan mengupdate lokasi pengguna secara berkala
   void _startLocationTracking() {
+    // Konfigurasi akurasi dan filter jarak untuk efisiensi baterai
     const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 10, // meters
+      accuracy: LocationAccuracy.bestForNavigation, // Akurasi tinggi untuk navigasi
+      distanceFilter: 10, // Update setiap pergerakan 10 meter
     );
     
+    // Berlangganan stream posisi
     _positionStream = Geolocator.getPositionStream(locationSettings: locationSettings)
         .listen((Position position) {
       if (_isTracking) {
         setState(() {
+          // Update posisi dengan koordinat baru
           _currentPosition = LatLng(position.latitude, position.longitude);
+          // Gerakkan peta ke posisi baru jika tidak sedang navigasi
           if (!_isNavigating) {
             _mapController.move(_currentPosition, _currentZoom);
           }
         });
         
-        // Update route if navigating
+        // Update rute jika sedang dalam mode navigasi
         if (_isNavigating && _destinationPosition != null) {
           _getRoute();
         }
@@ -80,6 +126,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     });
   }
 
+  /// Mendapatkan posisi awal pengguna
+  /// 
+  /// Memeriksa izin lokasi, mengaktifkan layanan lokasi jika perlu,
+  /// dan mendapatkan posisi pengguna saat ini dengan akurasi tinggi
   Future<void> _determinePosition() async {
     setState(() {
       _isLocationLoading = true;
@@ -88,7 +138,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
+    // Memeriksa apakah layanan lokasi aktif
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       if (mounted) {
@@ -105,7 +155,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       return;
     }
 
-    // Check location permissions
+    // Memeriksa dan meminta izin lokasi jika diperlukan
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -127,18 +177,20 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     }
 
     try {
-      // Get current position with high accuracy
+      // Mendapatkan posisi dengan akurasi tinggi dan batas waktu
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
         timeLimit: const Duration(seconds: 10),
       );
 
       setState(() {
+        // Update posisi dan tampilan peta
         _currentPosition = LatLng(position.latitude, position.longitude);
         _mapController.move(_currentPosition, _currentZoom);
         _isLocationLoading = false;
       });
     } catch (e) {
+      // Tangani error saat mendapatkan lokasi
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -153,21 +205,32 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     }
   }
 
+  /// Memperbesar tampilan peta (+1 level zoom)
   void _zoomIn() {
     setState(() {
+      // Membatasi nilai zoom antara 3.0 - 18.0
       _currentZoom = (_currentZoom + 1).clamp(3.0, 18.0);
       _mapController.move(_mapController.center, _currentZoom);
     });
   }
 
+  /// Memperkecil tampilan peta (-1 level zoom)
   void _zoomOut() {
     setState(() {
+      // Membatasi nilai zoom antara 3.0 - 18.0
       _currentZoom = (_currentZoom - 1).clamp(3.0, 18.0);
       _mapController.move(_mapController.center, _currentZoom);
     });
   }
 
+  /// Mencari lokasi berdasarkan query teks
+  /// 
+  /// Menggunakan API Nominatim (OpenStreetMap) dengan fallback ke API alternatif
+  /// jika pencarian utama gagal
+  /// 
+  /// @param query String pencarian lokasi
   Future<void> _searchLocation(String query) async {
+    // Hapus hasil pencarian jika query kosong
     if (query.isEmpty) {
       setState(() {
         _searchResults = [];
@@ -176,7 +239,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       return;
     }
 
-    // Check cache first
+    // Periksa cache untuk menghemat request API
     if (_searchCache.containsKey(query)) {
       setState(() {
         _searchResults = _searchCache[query]!;
@@ -190,19 +253,20 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     });
 
     try {
-      // Try Nominatim first
+      // Menggunakan API Nominatim untuk pencarian lokasi
       final nominatimResponse = await http.get(
         Uri.parse(
           'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(query)}'
           '&format=json&limit=5&addressdetails=1&countrycodes=id&polygon_geojson=1',
         ),
-        headers: {'User-Agent': 'TrackingLBSApp'},
-      ).timeout(const Duration(seconds: 3));
+        headers: {'User-Agent': 'TrackingLBSApp'}, // User-Agent diperlukan oleh Nominatim
+      ).timeout(const Duration(seconds: 3)); // Timeout untuk menghindari hang
 
       if (nominatimResponse.statusCode == 200) {
         List<dynamic> data = jsonDecode(nominatimResponse.body);
         List<Map<String, dynamic>> results = [];
 
+        // Memetakan hasil pencarian ke format yang lebih mudah digunakan
         for (var item in data) {
           results.add({
             'display_name': item['display_name'],
@@ -213,29 +277,34 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           });
         }
 
-        // Sort by importance (higher importance = better match)
+        // Urutkan berdasarkan importance (lebih tinggi = hasil lebih relevan)
         results.sort((a, b) => (b['importance'] as double).compareTo(a['importance'] as double));
 
         setState(() {
-          _searchResults = results.take(5).toList(); // Limit to top 5 results
+          _searchResults = results.take(5).toList(); // Batasi 5 hasil teratas
           _isSearching = false;
         });
 
-        // Cache the results
+        // Simpan hasil ke cache
         _searchCache[query] = _searchResults;
       } else {
-        // Fallback to another service if Nominatim fails
+        // Gunakan API alternatif jika Nominatim gagal
         await _fallbackSearch(query);
       }
     } catch (e) {
-      // Try fallback if primary search fails
+      // Gunakan pencarian alternatif jika terjadi error
       await _fallbackSearch(query);
     }
   }
 
+  /// Metode pencarian alternatif dengan Mapbox API
+  /// 
+  /// Dipanggil jika pencarian utama (Nominatim) gagal
+  /// 
+  /// @param query String pencarian lokasi
   Future<void> _fallbackSearch(String query) async {
     try {
-      // Example using Mapbox API (replace with your actual token)
+      // Contoh menggunakan API Mapbox (ganti dengan token yang valid)
       const mapboxToken = 'pk.yourmapboxtoken';
       final response = await http.get(
         Uri.parse(
@@ -249,6 +318,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
         final data = jsonDecode(response.body);
         List<Map<String, dynamic>> results = [];
 
+        // Format hasil Mapbox ke format yang konsisten dengan Nominatim
         for (var feature in data['features']) {
           results.add({
             'display_name': feature['place_name'],
@@ -268,12 +338,13 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
           _isSearching = false;
         });
 
-        // Cache the results
+        // Simpan hasil ke cache
         _searchCache[query] = _searchResults;
       } else {
         throw Exception('Fallback search failed');
       }
     } catch (e) {
+      // Tampilkan pesan error jika kedua metode pencarian gagal
       setState(() {
         _searchResults = [{
           'display_name': 'Pencarian tidak tersedia saat ini',
@@ -284,6 +355,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     }
   }
 
+  /// Format alamat lokasi untuk tampilan yang lebih user-friendly
+  /// 
+  /// @param location Map data lokasi
+  /// @return String alamat yang diformat
   String _formatAddress(Map<String, dynamic> location) {
     if (location.containsKey('error')) return location['display_name'];
     
@@ -291,7 +366,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       final address = location['address'];
       List<String> parts = [];
       
-      // Build address from most specific to least specific
+      // Susun alamat dari yang paling spesifik ke umum
       if (address['road'] != null) parts.add(address['road']);
       if (address['neighbourhood'] != null) parts.add(address['neighbourhood']);
       if (address['suburb'] != null) parts.add(address['suburb']);
@@ -299,7 +374,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       if (address['city'] != null) parts.add(address['city']);
       if (address['state'] != null) parts.add(address['state']);
       
-      // If we don't have enough details, use the full display name
+      // Jika detail tidak cukup, gunakan nama lengkap
       if (parts.length < 2 && location['display_name'] != null) {
         return location['display_name'].toString().split(',').take(3).join(', ');
       }
@@ -307,7 +382,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       return parts.join(', ');
     }
     
-    // For Mapbox results
+    // Untuk hasil dari Mapbox
     if (location['display_name'] != null) {
       return location['display_name'].toString().split(',').take(3).join(', ');
     }
@@ -315,6 +390,10 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     return 'Lokasi tidak diketahui';
   }
 
+  /// Mendapatkan subtitle lokasi (biasanya kota dan provinsi)
+  /// 
+  /// @param result Map data lokasi
+  /// @return String subtitle lokasi
   String _getLocationSubtitle(Map<String, dynamic> result) {
     if (result.containsKey('error')) return '';
     
@@ -329,19 +408,31 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     return result['display_name']?.toString().split(',').skip(1).take(2).join(',') ?? '';
   }
 
+  /// Mengatur lokasi tujuan untuk navigasi
+  /// 
+  /// @param location Map data lokasi yang dipilih
   void _setDestination(Map<String, dynamic> location) {
     if (location.containsKey('lat') && location.containsKey('lon')) {
       setState(() {
+        // Set koordinat tujuan
         _destinationPosition = LatLng(location['lat'], location['lon']);
+        // Update teks pencarian dengan alamat tujuan
         _searchController.text = _formatAddress(location);
+        // Kosongkan hasil pencarian
         _searchResults = [];
-        _isTracking = false; // Stop automatic tracking when destination is set
+        // Hentikan tracking otomatis saat tujuan diatur
+        _isTracking = false; 
       });
       
+      // Dapatkan rute ke tujuan
       _getRoute();
     }
   }
 
+  /// Mendapatkan rute dari posisi saat ini ke tujuan
+  /// 
+  /// Menggunakan OSRM API untuk mendapatkan rute mengemudi
+  /// dengan fallback ke rute sederhana jika API gagal
   Future<void> _getRoute() async {
     if (_currentPosition == null || _destinationPosition == null) return;
     
@@ -350,7 +441,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     });
 
     try {
-      // Use OSRM API for routing
+      // Gunakan OSRM API untuk kalkulasi rute
       final response = await http.get(
         Uri.parse(
           'http://router.project-osrm.org/route/v1/driving/'
@@ -363,6 +454,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['code'] == 'Ok') {
+          // Ekstrak koordinat dari respons GeoJSON
           List<dynamic> coordinates = data['routes'][0]['geometry']['coordinates'];
           List<LatLng> routePoints = coordinates.map((coord) {
             return LatLng(coord[1].toDouble(), coord[0].toDouble());
@@ -372,13 +464,14 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
             _routePoints = routePoints;
           });
           
+          // Sesuaikan tampilan peta untuk menampilkan seluruh rute
           _fitRouteOnMap();
         }
       } else {
         throw Exception('Failed to load route');
       }
     } catch (e) {
-      // Fallback to simple route if API fails
+      // Fallback ke rute sederhana jika API gagal
       List<LatLng> route = _generateSimpleRoute(_currentPosition, _destinationPosition!);
       setState(() {
         _routePoints = route;
@@ -396,11 +489,18 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     }
   }
 
+  /// Membuat rute sederhana garis lurus dari titik awal ke tujuan
+  /// 
+  /// Digunakan sebagai fallback jika API rute gagal
+  /// 
+  /// @param start LatLng posisi awal
+  /// @param end LatLng posisi tujuan
+  /// @return List<LatLng> titik-titik rute sederhana
   List<LatLng> _generateSimpleRoute(LatLng start, LatLng end) {
     List<LatLng> points = [];
     points.add(start);
     
-    // Create intermediate points to make it look like a route
+    // Buat titik perantara untuk membuat tampilan rute
     double latStep = (end.latitude - start.latitude) / 10;
     double lngStep = (end.longitude - start.longitude) / 10;
     
@@ -415,49 +515,57 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
     return points;
   }
 
+  /// Menyesuaikan tampilan peta untuk menampilkan seluruh rute
+  /// 
+  /// Menghitung batas, pusat, dan level zoom yang optimal
   void _fitRouteOnMap() {
     if (_routePoints.isEmpty) return;
     
-    // Get bounds of all points in the route
+    // Hitung batas koordinat semua titik dalam rute
     double minLat = _routePoints.map((p) => p.latitude).reduce((a, b) => a < b ? a : b);
     double maxLat = _routePoints.map((p) => p.latitude).reduce((a, b) => a > b ? a : b);
     double minLng = _routePoints.map((p) => p.longitude).reduce((a, b) => a < b ? a : b);
     double maxLng = _routePoints.map((p) => p.longitude).reduce((a, b) => a > b ? a : b);
     
-    // Add some padding
+    // Tambah padding untuk tampilan lebih baik
     minLat -= 0.01;
     maxLat += 0.01;
     minLng -= 0.01;
     maxLng += 0.01;
     
-    // Calculate center and zoom
+    // Hitung pusat
     double centerLat = (minLat + maxLat) / 2;
     double centerLng = (minLng + maxLng) / 2;
     
-    // Calculate zoom level based on the distance
+    // Hitung level zoom berdasarkan jarak
     double distance = const Distance().distance(_currentPosition, _destinationPosition!);
     double zoom = 16.0;
     
+    // Sesuaikan zoom berdasarkan jarak dalam meter
     if (distance > 5000) zoom = 12.0;
     else if (distance > 2000) zoom = 13.0;
     else if (distance > 1000) zoom = 14.0;
     else if (distance > 500) zoom = 15.0;
     
-    // Move map to fit route
+    // Gerakkan peta untuk menampilkan seluruh rute
     _mapController.move(LatLng(centerLat, centerLng), zoom);
   }
 
+  /// Membatalkan navigasi aktif
+  /// 
+  /// Menghapus rute, tujuan, dan kembali ke mode pelacakan
   void _cancelNavigation() {
     setState(() {
       _isNavigating = false;
       _routePoints = [];
       _destinationPosition = null;
       _searchController.text = "";
-      _isTracking = true; // Resume automatic tracking
+      _isTracking = true; // Mulai kembali tracking otomatis
       _mapController.move(_currentPosition, _currentZoom);
     });
   }
 
+  /// Membangun tampilan widget
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -477,7 +585,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
         children: [
           Column(
             children: [
-              // Search bar
+              // Widget kotak pencarian
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 color: Colors.white,
@@ -498,6 +606,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                           contentPadding: const EdgeInsets.symmetric(vertical: 0),
                         ),
                         onChanged: (value) {
+                          // Debounce input pencarian untuk mengurangi request API
                           if (_searchDebounce?.isActive ?? false) _searchDebounce?.cancel();
                           
                           _searchDebounce = Timer(_searchDebounceTime, () {
@@ -512,6 +621,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                         },
                       ),
                     ),
+                    // Tombol cancel navigasi
                     if (_isNavigating)
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.red),
@@ -521,7 +631,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                 ),
               ),
               
-              // Search results
+              // Menampilkan hasil pencarian dalam list
               if (_searchResults.isNotEmpty)
                 Container(
                   height: _searchResults.length > 3 ? 200 : null,
@@ -571,6 +681,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                           },
                         ),
                 )
+              // Indikator loading saat pencarian berlangsung
               else if (_isSearching)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -585,6 +696,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                     ),
                   ),
                 )
+              // Pesan jika tidak ada hasil pencarian
               else if (_searchController.text.isNotEmpty && _searchResults.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -593,25 +705,27 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                   ),
                 ),
               
-              // Map
+              // Widget peta utama
               Expanded(
                 child: Stack(
                   children: [
+                    // Komponen FlutterMap untuk menampilkan peta OpenStreetMap
                     FlutterMap(
                       mapController: _mapController,
                       options: MapOptions(
                         center: _currentPosition,
                         zoom: _currentZoom,
-                        interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                        interactiveFlags: InteractiveFlag.all & ~InteractiveFlag.rotate, // Disable rotasi
                       ),
                       children: [
+                        // Layer tile peta dasar
                         TileLayer(
                           urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                           subdomains: const ['a', 'b', 'c'],
                           userAgentPackageName: 'com.example.tracking_lbs',
                         ),
                         
-                        // Current location marker
+                        // Marker lokasi pengguna saat ini
                         MarkerLayer(
                           markers: [
                             Marker(
@@ -637,7 +751,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                           ],
                         ),
                         
-                        // Route polyline
+                        // Polyline untuk menampilkan rute
                         if (_routePoints.isNotEmpty)
                           PolylineLayer(
                             polylines: [
@@ -649,7 +763,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                             ],
                           ),
                         
-                        // Destination marker
+                        // Marker lokasi tujuan
                         if (_destinationPosition != null)
                           MarkerLayer(
                             markers: [
@@ -668,7 +782,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                       ],
                     ),
                     
-                    // Zoom controls
+                    // Kontrol zoom peta
                     Positioned(
                       bottom: 100,
                       right: 25,
@@ -694,7 +808,7 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
                       ),
                     ),
                     
-                    // Navigation info panel
+                    // Panel informasi navigasi yang muncul saat navigasi aktif
                     if (_isNavigating && _destinationPosition != null)
                       Positioned(
                         bottom: 20,
@@ -755,18 +869,19 @@ class _TrackinglbsPageState extends State<TrackinglbsPage> {
             ],  
           ),
           
-          // Loading indicator for initial location
+          // Indikator loading saat mendapatkan lokasi awal
           if (_isLocationLoading)
             Center(
               child: CircularProgressIndicator(color: primaryColor),
             ),
         ],
       ),
+      // Tombol untuk kembali ke lokasi pengguna (my location)
       floatingActionButton: FloatingActionButton(
         backgroundColor: primaryColor,
         onPressed: () {
           setState(() {
-            _isTracking = true; // Resume tracking when button is pressed
+            _isTracking = true; // Aktifkan kembali pelacakan otomatis
           });
           _mapController.move(_currentPosition, _currentZoom);
         },

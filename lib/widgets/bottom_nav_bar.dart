@@ -4,8 +4,12 @@ import '../pages/main_menu.dart';
 import '../pages/team_members_page.dart';
 import '../pages/help_page.dart';
 
+/// Widget navigasi bawah utama yang mendukung animasi dan penyorotan ikon aktif.
 class BottomNavBar extends StatefulWidget {
+  /// Indeks dari item navigasi yang sedang aktif.
   final int currentIndex;
+
+  /// Fungsi callback saat salah satu item navigasi ditekan.
   final Function(int) onTap;
 
   const BottomNavBar({
@@ -20,20 +24,22 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  
+
   @override
   void initState() {
     super.initState();
+    // Inisialisasi controller untuk animasi floating icon
     _animationController = AnimationController(
       vsync: this,
       duration: Duration(milliseconds: 300),
     );
     _animationController.forward();
   }
-  
+
   @override
   void dispose() {
-    _animationController.dispose();
+    // Hentikan dan buang controller saat widget dihapus dari tree
+    _animationController.dispose();   
     super.dispose();
   }
 
@@ -43,6 +49,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
       clipBehavior: Clip.none,
       alignment: Alignment.bottomCenter,
       children: [
+        // Container dasar untuk navigasi bawah
         Container(
           height: 60,
           decoration: BoxDecoration(
@@ -52,7 +59,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                 color: Colors.grey.withOpacity(0.3),
                 spreadRadius: 1,
                 blurRadius: 10,
-                offset: Offset(0, -2),
+                offset: Offset(0, -2), // bayangan ke atas
               ),
             ],
           ),
@@ -65,10 +72,11 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
             ],
           ),
         ),
-        // Floating circle for selected item
+
+        // Floating circle dengan ikon untuk item yang sedang dipilih
         if (widget.currentIndex >= 0 && widget.currentIndex <= 2)
           Positioned(
-            top: -20,
+            top: -20, // posisi naik dari navigasi bawah
             child: TweenAnimationBuilder(
               tween: Tween<double>(begin: 0.0, end: 1.0),
               duration: Duration(milliseconds: 300),
@@ -85,7 +93,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                       height: 50,
                       width: 50,
                       decoration: BoxDecoration(
-                        color: Color(0xFF6A11CB),
+                        color: Color(0xFF6A11CB), // warna ungu gradient
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
@@ -96,6 +104,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                         ],
                       ),
                       child: Icon(
+                        // Icon berdasarkan currentIndex
                         widget.currentIndex == 0 
                             ? Icons.home 
                             : widget.currentIndex == 1 
@@ -114,12 +123,14 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
     );
   }
 
+  /// Membangun widget untuk setiap item navigasi
   Widget _buildNavItem(int index, IconData icon, String label) {
     final bool isSelected = widget.currentIndex == index;
     
     return Expanded(
       child: InkWell(
         onTap: () {
+          // Memulai ulang animasi saat item ditekan
           _animationController.reset();
           _animationController.forward();
           widget.onTap(index);
@@ -128,7 +139,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Empty space to prevent overlapping with floating circle
+            // Memberi ruang kosong untuk floating icon agar tidak tabrakan
             isSelected 
                 ? SizedBox(height: 26) 
                 : SizedBox(
@@ -140,6 +151,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
                     ),
                   ),
             SizedBox(height: 4),
+            // Animasi teks label saat item aktif
             AnimatedDefaultTextStyle(
               duration: Duration(milliseconds: 300),
               style: TextStyle(
